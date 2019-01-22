@@ -17,7 +17,7 @@ class CNN:
             self.out = self.Cond_conv(self.input)
 
             is_positive = tf.cast(tf.equal(self.label, 1), tf.float32)
-            weight = 10 * is_positive + 1 * (1 - is_positive)
+            weight = 3 * is_positive + 1 * (1 - is_positive)
             self.loss = tf.multiply(weight, tf.nn.l2_loss(tf.subtract(self.label, self.out)))
 
             print("Building optimization")
@@ -97,7 +97,8 @@ class CNN:
                     r = (A_and_A_ / A) if A > 1e-5 else 0.
                     F = (2 * p * r / (p + r)) if (p + r) > 1e-5 else 0.
                     print('Epoch:%d  Sample:%d  Mean Loss:%05f' % (j, i, np.average(loss_array)), end=' ')
-                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f' % (accuracy, p, r, F))
+                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f' % (accuracy, p, r, F), end=' ')
+                    print('All: %d, Result: %d, A_: %d, Correct: %d' % (np.shape(ddata)[0], A, A_, correct))
                 self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps+j)
 
     def test(self, data_path):
