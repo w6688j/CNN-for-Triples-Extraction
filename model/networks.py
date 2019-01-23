@@ -35,11 +35,11 @@ class CNN:
             output2 = self.set_conv(output1, 2, 64, 'conv_layer2')  # Output2 shape : [1, 25, 2, 64]
             output3 = self.set_conv(output2, 5, 2, 'conv_layer3')  # Output3 shape : [1, 5, 2, 2]
             output3 = tf.reshape(output3, [1, 20])
-            W = tf.get_variable('CNN_W', shape=[20, 1], dtype=tf.float32,
+            W = tf.get_variable('CNN_W', shape=[20, 2], dtype=tf.float32,
                                 initializer=tf.random_normal_initializer())
-            b = tf.get_variable('CNN_b', shape=[1], dtype=tf.float32,
+            b = tf.get_variable('CNN_b', shape=[2], dtype=tf.float32,
                                 initializer=tf.random_normal_initializer())
-            condition = tf.nn.tanh(tf.squeeze(tf.add(tf.matmul(output3, W), b)))
+            condition = tf.nn.softmax(tf.squeeze(tf.add(tf.matmul(output3, W), b)))
             return condition
 
     def set_conv(self, input, scale, channel, name='conv'):
@@ -84,13 +84,14 @@ class CNN:
                     #  Each Sample has many combinations to input
                     for k in range(np.shape(ddata)[0]):
                         loss, out, _ = sess.run([self.loss, self.out, self.optm], feed_dict={self.input: ddata[k],
-                                                                                             self.label: [label[k]]})
+                                                                                             self.label: [label[k],
+                                                                                                          1 - label[k]]})
                         loss_array.append(loss)
-                        if out > 0:
+                        if out[0] - 0.5 > 0:
                             A_ += 1
-                            if label[k] > 0:
+                            if label[k] - 0.5 > 0:
                                 A_and_A_ += 1
-                        if out * label[k] > 0:
+                        if (out[0] - .5) * (label[k] - .5) > 0:
                             correct += 1.
                     accuracy = correct / np.shape(ddata)[0]
                     p = (A_and_A_ / A_) if A_ > 1e-5 else 0.
@@ -127,15 +128,13 @@ class CNN:
                                                          self.max_input_length)
                 #  Each Sample has many combinations to input
                 for k in range(np.shape(ddata)[0]):
-                    hout = sess.run(self.hout, feed_dict={self.input: ddata[k],
-                                                          self.label: [label[k]],
-                                                          self.flstm.mask: mask,
-                                                          self.blstm.mask: mask[-1::-1]})
-                    if hout > 0:
+                    out = sess.run(self.out, feed_dict={self.input: ddata[k],
+                                                        self.label: [label[k]]})
+                    if out[0] - 0.5 > 0:
                         A_ += 1
-                        if label[k] > 0:
+                        if label[k] - 0.5 > 0:
                             A_and_A_ += 1
-                    if hout * label[k] > 0:
+                    if (out - .5) * (label[k] - .5) > 0:
                         correct += 1.
                 A += len(results)
                 data_num += np.shape(ddata)[0]
