@@ -1,8 +1,7 @@
 import numpy as np
 import copy
 
-
-def data_process(indexes, times, attributes, values, results=None, max_input_length=200):
+def data_process(indexes, times, attributes, values, results=[], max_input_length=250):
     label = []
     data = []
     mask = []
