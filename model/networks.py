@@ -134,4 +134,6 @@ class CNN:
                 for k in range(np.shape(ddata)[0]):
                     hout = sess.run(self.out, feed_dict={self.input: ddata[k]})
                     if hout[0] > 0.5:
-                        writer.input_the_data(ddata[k], 0)
+                        writer.input_the_data(ddata[k].tolist(), 0)
+                writer.input_the_data(ddata[0].tolist(), 1)
+            writer.input_the_data([1, 2, 3], 1, 1)
