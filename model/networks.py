@@ -8,7 +8,6 @@ from data.test_output import generate_my_json
 class CNN:
     def __init__(self, xhc_size, lr=1e-4, max_input_length=250):
         with tf.variable_scope('CNN', reuse=tf.AUTO_REUSE):
-
             self.max_input_length = max_input_length
             self.xhc_size = xhc_size
 
@@ -24,14 +23,14 @@ class CNN:
             print("Building optimization")
             self.optm = tf.train.GradientDescentOptimizer(lr).minimize(self.loss)
 
-            self.base_address = 'D:\\UserData\\DeepLearning\\CNN-for-Triples-Extraction\\'
+            self.base_address = 'E:/Projects/PyCharmProjects/GitHub/CNN-for-Triples-Extraction/'
             self.saver = tf.train.Saver(max_to_keep=3)
 
     def Cond_conv(self, input, name='Conditional_layer_CNN'):
         with tf.variable_scope(name):
             #  Input shape : [1, 250, 2, 1]
             input = input[np.newaxis, :, :, np.newaxis]
-            output0 = self.set_conv(input, 1, 128, 'conv_layer0')    # Output0 shape : [1, 250, 2, 128]
+            output0 = self.set_conv(input, 1, 128, 'conv_layer0')  # Output0 shape : [1, 250, 2, 128]
             output1 = self.set_conv(output0, 5, 256, 'conv_layer1')  # Output1 shape : [1, 50, 2, 256]
             output2 = self.set_conv(output1, 2, 64, 'conv_layer2')  # Output2 shape : [1, 25, 2, 64]
             output3 = self.set_conv(output2, 5, 32, 'conv_layer3')  # Output3 shape : [1, 5, 2, 32]
@@ -46,7 +45,8 @@ class CNN:
 
     def set_conv(self, input, scale, channel, name='conv'):
         with tf.variable_scope(name):
-            filter = tf.get_variable('filter', shape=[5, self.xhc_size[0], np.shape(input)[-1], channel], dtype=tf.float32,
+            filter = tf.get_variable('filter', shape=[5, self.xhc_size[0], np.shape(input)[-1], channel],
+                                     dtype=tf.float32,
                                      initializer=tf.random_normal_initializer())
             b = tf.get_variable('b', shape=[channel], dtype=tf.float32,
                                 initializer=tf.random_normal_initializer())
@@ -67,7 +67,7 @@ class CNN:
                 latest = tf.train.latest_checkpoint(self.base_address + 'parameters/')
                 self.saver.restore(sess, latest)
 
-            writer = tf.summary.FileWriter(".\\Visual\\")
+            writer = tf.summary.FileWriter("/Visual")
             writer.add_graph(sess.graph)
             #  Epoch
             for j in range(maxepoch):
@@ -91,8 +91,8 @@ class CNN:
                     #  Each Sample has many combinations to input
                     for k in range(np.shape(ddata)[0]):
                         loss, out, _, output_process = sess.run([self.loss, self.out, self.optm, self.output_process],
-                                                                 feed_dict={self.input: ddata[k],
-                                                                            self.label: [label[k], 1-label[k]]})
+                                                                feed_dict={self.input: ddata[k],
+                                                                           self.label: [label[k], 1 - label[k]]})
 
                         loss_array.append(loss)
                         out_array.append(out)
@@ -108,9 +108,11 @@ class CNN:
                     F = (2 * p * r / (p + r)) if (p + r) > 1e-5 else 0.
                     var = np.var(out_array)
                     print('Epoch:%d  Sample:%d  Mean Loss:%05f' % (j, i, np.average(loss_array)), end=' ')
-                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f, Var: %f' % (accuracy, p, r, F, var), end=' ')
-                    print('All: %d, A_: %d, Result: %d, Correct: %d, ALL=A_: %d' % (np.shape(ddata)[0], A_, A, correct, np.shape(ddata)[0]==A_))
-                self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps+j)
+                    print('Accuracy: %05f Precise: %05f, Recall: %05f, F1 Score: %05f, Var: %f' % (
+                    accuracy, p, r, F, var), end=' ')
+                    print('All: %d, A_: %d, Result: %d, Correct: %d, ALL=A_: %d' % (
+                    np.shape(ddata)[0], A_, A, correct, np.shape(ddata)[0] == A_))
+                self.saver.save(sess, 'parameters/BLSTM', global_step=trained_steps + j)
 
     def test(self, data_path):
         data = json.load(open(data_path, 'r'))
@@ -129,7 +131,8 @@ class CNN:
                 times = data[i]['times']
                 attributes = data[i]['attributes']
                 values = data[i]['values']
-                ddata, label, mask = loader.data_process(indexes, times, attributes, values, max_input_length=self.max_input_length)
+                ddata, label, mask = loader.data_process(indexes, times, attributes, values,
+                                                         max_input_length=self.max_input_length)
                 #  Each Sample has many combinations to input
                 for k in range(np.shape(ddata)[0]):
                     hout = sess.run(self.out, feed_dict={self.input: ddata[k]})
